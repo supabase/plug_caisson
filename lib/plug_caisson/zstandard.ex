@@ -7,15 +7,30 @@ defmodule PlugCaisson.Zstandard do
   [zstd]: https://facebook.github.io/zstd/
   """
 
-  @impl true
   if Code.ensure_loaded?(:ezstd) do
-    def decompress(data, _opts) do
+    @impl true
+    def init(_opts), do: {:ok, []}
+
+    @impl true
+    def deinit(_state), do: :ok
+
+    @impl true
+    def process(_state, data) do
       case :ezstd.decompress(data) do
         {:error, _} = error -> error
         decompressed -> {:ok, decompressed}
       end
     end
   else
-    def decompress(_data, _opts), do: {:error, :not_supported}
+    @impl true
+    def init(_opts), do: {:error, :not_supported}
+
+    @impl true
+    def deinit(_state), do: :ok
+
+    @impl true
+    def process(_state, data) do
+      {:error, :not_supported}
+    end
   end
 end
