@@ -15,7 +15,7 @@ defmodule PlugCaisson.Zstandard do
     def deinit(_state), do: :ok
 
     @impl true
-    def process(_state, data) do
+    def process(_state, data, _opts) do
       case :ezstd.decompress(data) do
         {:error, _} = error -> error
         decompressed -> {:ok, decompressed}

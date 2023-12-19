@@ -17,7 +17,7 @@ defmodule PlugCaisson.Brotli do
     def deinit(_state), do: :ok
 
     @impl true
-    def process(decoder, data) do
+    def process(decoder, data, _opts) do
       with :error <- :brotli_decoder.stream(decoder, data) do
         {:error, :decompression_error}
       end
