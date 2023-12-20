@@ -10,10 +10,10 @@ defmodule PlugCaisson do
     "zstd" => {PlugCaisson.Zstandard, []}
   }
 
-  @callback decompress(data :: binary(), opts :: term()) ::
-              {:ok, binary()}
-              | {:more, binary()}
-              | {:error, term()}
+  @callback init(opts :: term()) :: {:ok, state :: term()} | {:error, term()}
+  @callback deinit(state :: term()) :: term()
+  @callback process(state :: term(), data :: binary()) ::
+              {:ok, binary()} | {:more, binary()} | {:error, term()}
 
   @doc """
   Read `Plug.Conn` request body and decompress it if needed.
@@ -42,27 +42,51 @@ defmodule PlugCaisson do
   @spec read_body(Plug.Conn.t()) ::
           {:ok, binary(), Plug.Conn.t()} | {:more, binary(), Plug.Conn.t()} | {:error, term()}
   def read_body(conn, opts \\ []) do
-    content_encoding = Plug.Conn.get_req_header(conn, "content-encoding")
-    types = opts[:algorithms] || @default
+    with {:ok, decoder, conn} <- fetch_decompressor(conn, opts[:algorithms] || @default) do
+      case Plug.Conn.read_body(conn, opts) do
+        {type, body, conn} when type in [:ok, :more] ->
+          case try_decompress(body, decoder) do
+            {:error, _} = error -> error
+            {:ok, data} when type == :ok -> {:ok, data, conn}
+            {_, data} -> {:more, data, conn}
+          end
 
-    with {:ok, body, conn} <- Plug.Conn.read_body(conn, opts) do
-      case try_decompress(body, content_encoding, types) do
-        {:ok, data} -> {:ok, data, conn}
-        {:more, data} -> {:more, data, conn}
-        {:error, _} = error -> error
+        {:error, _} = error ->
+          error
       end
     end
   end
 
-  defp try_decompress(data, [], _types), do: {:ok, data}
+  defp fetch_decompressor(%Plug.Conn{private: %{__MODULE__ => {mod, state}}} = conn, _types) do
+    {:ok, {mod, state}, conn}
+  end
 
-  defp try_decompress(data, [type], types) do
-    case Map.fetch(types, type) do
-      {:ok, {mod, opts}} ->
-        mod.decompress(data, opts)
+  defp fetch_decompressor(conn, types) do
+    case Plug.Conn.get_req_header(conn, "content-encoding") do
+      [content_encoding] ->
+        case Map.fetch(types, content_encoding) do
+          {:ok, {mod, opts}} ->
+            with {:ok, state} <- mod.init(opts) do
+              new_conn =
+                conn
+                |> Plug.Conn.put_private(__MODULE__, {mod, state})
+                |> Plug.Conn.register_before_send(fn _conn ->
+                  mod.deinit(state)
+                end)
 
-      :error ->
-        {:error, :not_supported}
+              {:ok, {mod, state}, new_conn}
+            end
+
+          _ ->
+            {:error, :not_supported}
+        end
+
+      [] ->
+        {:ok, :raw, conn}
     end
   end
+
+  defp try_decompress(data, :raw), do: {:ok, data}
+
+  defp try_decompress(data, {mod, state}), do: mod.process(state, data)
 end

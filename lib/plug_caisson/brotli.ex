@@ -7,12 +7,33 @@ defmodule PlugCaisson.Brotli do
   [Brotli]: https://brotli.org
   """
 
-  @impl true
-  if Code.ensure_loaded?(:brotli) do
-    def decompress(data, _opts) do
-      :brotli.decode(data)
+  if Code.ensure_loaded?(:brotli_decoder) do
+    @impl true
+    def init(_opts) do
+      {:ok, :brotli_decoder.new()}
+    end
+
+    @impl true
+    def deinit(_state), do: :ok
+
+    @impl true
+    def process(decoder, data) do
+      with :error <- :brotli_decoder.stream(decoder, data) do
+        {:error, :decompression_error}
+      end
     end
   else
-    def decompress(_data, _opts), do: {:error, :not_supported}
+    @impl true
+    def init(_opts) do
+      {:error, :not_supported}
+    end
+
+    @impl true
+    def deinit(_state), do: :ok
+
+    @impl true
+    def process(decoder, data) do
+      {:error, :not_supported}
+    end
   end
 end

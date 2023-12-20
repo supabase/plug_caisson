@@ -22,21 +22,29 @@ defmodule PlugCaisson.Zlib do
   @max_chunk_count 25
 
   @impl true
-  def decompress(data, opts) do
+  def init(opts) do
     z = :zlib.open()
+    :zlib.inflateInit(z, window_bits(opts))
 
+    {:ok, z}
+  end
+
+  @impl true
+  def deinit(z) do
     try do
-      :zlib.inflateInit(z, window_bits(opts))
-      result = chunked_inflate(z, data)
       :zlib.inflateEnd(z)
-
-      result
     after
       :zlib.close(z)
-    else
+    end
+
+    :ok
+  end
+
+  @impl true
+  def process(state, data) do
+    case chunked_inflate(state, data) do
       {:finished, data} -> {:ok, IO.iodata_to_binary(data)}
-      {:continue, data} -> {:more, IO.iodata_to_binary(data)}
-      {:need_dictionary, _, _} -> {:error, :not_supported}
+      {:need_dictionary, _, _} -> {:error, :no_dictionary}
     end
   end
 
