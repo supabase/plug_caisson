@@ -63,6 +63,12 @@ defmodule PlugCaisson do
 
   defp fetch_decompressor(conn, types) do
     case Plug.Conn.get_req_header(conn, "content-encoding") do
+      [] ->
+        {:ok, :raw, conn}
+
+      ["identity"] ->
+        {:ok, :raw, conn}
+
       [content_encoding] ->
         case Map.fetch(types, content_encoding) do
           {:ok, {mod, opts}} ->
@@ -80,9 +86,6 @@ defmodule PlugCaisson do
           _ ->
             {:error, :not_supported}
         end
-
-      [] ->
-        {:ok, :raw, conn}
     end
   end
 
