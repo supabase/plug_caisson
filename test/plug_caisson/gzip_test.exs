@@ -24,6 +24,13 @@ defmodule PlugCaisson.GzipTest do
     assert raw == Enum.join(body_stream(conn, length: 10))
   end
 
+  test "when hit lenght limit it do not decompress further, even with zipbomb" do
+    data = File.read!(Path.join(__DIR__, "gzip_test/bomb.gz"))
+    conn = post(data, @content_type)
+
+    assert {:more, _, _} = PlugCaisson.read_body(conn)
+  end
+
   describe "corpus tests" do
     for {path, content} <- corpus() do
       test "#{path}" do
