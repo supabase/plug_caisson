@@ -38,6 +38,14 @@ defmodule PlugCaisson do
   - `deflate`
   - `br` (Brotli) - only if `:brotli` dependency is available
   - `zstd` (Zstandard) - only if `:ezstd` dependency is available
+
+  ## Options
+
+  All passed opts will be passed to `Plug.Conn.read_body/2` and to used
+  decompression handlers. Decompressors by default will use `:length` to limit
+  amount of returned data to prevent zipbombs. Returned data can be longer than
+  `:length` if the internal decompression buffer was larger. As it is described
+  in `Plug.Conn.read_body/2` docs. By default `length: 8_000_000`.
   """
   @spec read_body(Plug.Conn.t()) ::
           {:ok, binary(), Plug.Conn.t()} | {:more, binary(), Plug.Conn.t()} | {:error, term()}
