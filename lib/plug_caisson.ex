@@ -73,14 +73,7 @@ defmodule PlugCaisson do
         case Map.fetch(types, content_encoding) do
           {:ok, {mod, opts}} ->
             with {:ok, state} <- mod.init(opts) do
-              new_conn =
-                conn
-                |> Plug.Conn.put_private(__MODULE__, {mod, state})
-                |> Plug.Conn.register_before_send(fn _conn ->
-                  mod.deinit(state)
-                end)
-
-              {:ok, {mod, state}, new_conn}
+              {:ok, {mod, state}, set_state(conn, mod, state)}
             end
 
           _ ->
@@ -92,4 +85,13 @@ defmodule PlugCaisson do
   defp try_decompress(data, :raw), do: {:ok, data}
 
   defp try_decompress(data, {mod, state}), do: mod.process(state, data)
+
+  defp set_state(conn, mod, state) do
+    conn
+    |> Plug.Conn.put_private(__MODULE__, {mod, state})
+    |> Plug.Conn.register_before_send(fn conn ->
+      {mod, state} = conn.private[__MODULE__]
+      mod.deinit(state)
+    end)
+  end
 end

@@ -1,0 +1,28 @@
+name: Changelog
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  update-changelog:
+    name: Update changelog
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: master
+    - name: Generate a changelog
+      uses: orhun/git-cliff-action@v2
+      with:
+        config: cliff.toml
+        args: --verbose
+      env:
+        OUTPUT: CHANGELOG.md
+    - name: Commit
+      run: |
+        git config user.email ""
+        git config user.name "GitHub Action Bot"
+        git diff -- CHANGELOG.md
+        git commit -m "chore: update CHANGELOG [skip ci]" CHANGELOG.md && git push origin master || true
