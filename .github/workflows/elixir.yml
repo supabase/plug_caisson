@@ -5,7 +5,10 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
+    paths:
+      - lib/**
+      - test/**
+      - mix.exs
 jobs:
   build:
     name: Build and test
@@ -13,7 +16,7 @@ jobs:
     strategy:
       matrix:
         otp_version: ['24', '25', '26']
-        elixir_version: ['1.15', '1.16']
+        elixir_version: ['1.15']
     steps:
     - uses: actions/checkout@v3
     - name: Set up Elixir
@@ -32,4 +35,4 @@ jobs:
     - name: Install dependencies
       run: mix do deps.get, deps.compile
     - name: Run tests
-      run: mix test ${{ matrix.suite }}
+      run: mix test
