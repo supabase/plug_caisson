@@ -1,11 +1,11 @@
 # PlugCaisson
 
-Body reader that supports compressed payloads.
+An Elixir `Plug.Parsers` body reader that supports compressed payloads. Supports gzip, brotli, and [more](#supported-algorithms).
 
-[Caisson][caisson] is an geoengineering structure used to work on foundations of
-bridges and piers. Due to pressurised environment in the caisson (required to
-keep water out of it (as it has no bottom) people can get [decompression
-sickness][sick], also known as *caisson disease*.
+> A [caisson][caisson] is an geoengineering structure used to work on foundations of
+> bridges and piers. Due to pressurised environment in the caisson (required to
+> keep water out of it (as it has no bottom) people can get [decompression
+> sickness][sick], also known as _caisson disease_.
 
 [sick]: https://en.wikipedia.org/wiki/Decompression_sickness
 [caisson]: https://en.wikipedia.org/wiki/Caisson_(engineering)
@@ -17,19 +17,27 @@ Add `:plug_caisson` to dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:plug_caisson, "~> 0.1.0"}
+    {:plug_caisson, "~> 0.1.0"},
+    # optional, for brotli support
+    {:brotli, "~> 0.3.2"},
+    # optional, for zstd support
+    {:ezstd, "~> 1.0"},
   ]
 end
 ```
 
-And then add `{PlugCaisson, :read_body, []}` as a `:body_reader` to your
-`Plug.Parsers`:
+And then add `{PlugCaisson, :read_body, []}` as a `:body_reader` to your `Plug.Parsers`:
 
 ```elixir
 plug Plug.Parsers,
   parsers: [:urlencoded, :json],
-  body_reader: {PlugCaisson, :read_body, []}
+  body_reader: {PlugCaisson, :read_body, [
+    # optional, max decompressed size, defaults to 8_000_000 bytes
+    length: 8_000_000
+  ]}
 ```
+
+All options passed to the plug are forwarded to [`Plug.Conn.read_body/2`](https://hexdocs.pm/plug/Plug.Conn.html#read_body/2).
 
 ### Supported algorithms
 
@@ -48,12 +56,6 @@ plug Plug.Parsers,
 [RFC 7932]: https://datatracker.ietf.org/doc/html/rfc7932
 [RFC 8478]: https://datatracker.ietf.org/doc/html/rfc8478
 
-[^1]: Do not support streaming decoding yet, because of lack support for such
+[^1]:
+    Do not support streaming decoding yet, because of lack support for such
     flow upstream, see [ezstd#11](https://github.com/silviucpp/ezstd/issues/11)
-
-## TODO
-
-- [x] - partial Brotli decoding
-- [ ] - partial Zstd decoding
-- [ ] - support nested algorithms, i.e. `Content-Encoding: br, gzip` (pointless
-  in real life, but technically allowed by the HTTP)
