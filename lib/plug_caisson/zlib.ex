@@ -19,7 +19,6 @@ defmodule PlugCaisson.Zlib do
   """
 
   @max_wbits 15
-  @max_chunk_count 25
 
   @impl true
   def init(opts) do
@@ -41,9 +40,12 @@ defmodule PlugCaisson.Zlib do
   end
 
   @impl true
-  def process(state, data) do
-    case chunked_inflate(state, data) do
+  def process(state, data, opts) do
+    length = opts[:length]
+
+    case chunked_inflate(state, data, length) do
       {:finished, data} -> {:ok, IO.iodata_to_binary(data)}
+      {:more, data} -> {:more, IO.iodata_to_binary(data)}
       {:need_dictionary, _, _} -> {:error, :no_dictionary}
     end
   end
@@ -56,24 +58,24 @@ defmodule PlugCaisson.Zlib do
       end
   end
 
-  defp chunked_inflate(_res, _z, curr_chunk, _acc) when curr_chunk == @max_chunk_count do
-    raise RuntimeError, "max chunks reached"
-  end
-
-  defp chunked_inflate({:finished, output}, _z, _curr_chunk, acc) do
+  defp chunked_inflate({:finished, output}, _z, acc, _lenght) do
     {:finished, Enum.reverse([output | acc])}
   end
 
-  defp chunked_inflate({:continue, output}, z, curr_chunk, acc) do
-    z
-    |> :zlib.safeInflate([])
-    |> chunked_inflate(z, curr_chunk + 1, [output | acc])
+  defp chunked_inflate({:continue, output}, z, acc, length) do
+    if length - IO.iodata_length(output) <= 0 do
+      z
+      |> :zlib.safeInflate([])
+      |> chunked_inflate(z, [output | acc], length - byte_size(output))
+    else
+      {:more, Enum.reverse([output | acc])}
+    end
   end
 
   # initial
-  defp chunked_inflate(z, data) when is_binary(data) do
+  defp chunked_inflate(z, data, length) when is_binary(data) do
     z
     |> :zlib.safeInflate(data)
-    |> chunked_inflate(z, 0, [])
+    |> chunked_inflate(z, [], length)
   end
 end

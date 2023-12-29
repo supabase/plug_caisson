@@ -26,7 +26,11 @@ defmodule TestUtils do
 
   def corpus do
     Path.wildcard("test/corpus/*")
-    |> Enum.map(&{Path.basename(&1), File.read!(&1)})
+    |> Map.new(&{Path.basename(&1), File.read!(&1)})
+  end
+
+  def corpus(name) do
+    Map.fetch!(corpus(), name)
   end
 
   def binary_chunks(bin, width) do

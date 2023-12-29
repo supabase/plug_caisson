@@ -12,7 +12,7 @@ defmodule PlugCaisson do
 
   @callback init(opts :: term()) :: {:ok, state :: term()} | {:error, term()}
   @callback deinit(state :: term()) :: term()
-  @callback process(state :: term(), data :: binary()) ::
+  @callback process(state :: term(), data :: binary(), opts :: keyword()) ::
               {:ok, binary()} | {:more, binary()} | {:error, term()}
 
   @doc """
@@ -38,14 +38,24 @@ defmodule PlugCaisson do
   - `deflate`
   - `br` (Brotli) - only if `:brotli` dependency is available
   - `zstd` (Zstandard) - only if `:ezstd` dependency is available
+
+  ## Options
+
+  All passed opts will be passed to `Plug.Conn.read_body/2` and to used
+  decompression handlers. Decompressors by default will use `:length` to limit
+  amount of returned data to prevent zipbombs. Returned data can be longer than
+  `:length` if the internal decompression buffer was larger. As it is described
+  in `Plug.Conn.read_body/2` docs. By default `length: 8_000_000`.
   """
   @spec read_body(Plug.Conn.t()) ::
           {:ok, binary(), Plug.Conn.t()} | {:more, binary(), Plug.Conn.t()} | {:error, term()}
   def read_body(conn, opts \\ []) do
+    opts = Keyword.merge([length: 8_000_000], opts)
+
     with {:ok, decoder, conn} <- fetch_decompressor(conn, opts[:algorithms] || @default) do
       case Plug.Conn.read_body(conn, opts) do
         {type, body, conn} when type in [:ok, :more] ->
-          case try_decompress(body, decoder) do
+          case try_decompress(body, decoder, opts) do
             {:error, _} = error -> error
             {:ok, data} when type == :ok -> {:ok, data, conn}
             {_, data} -> {:more, data, conn}
@@ -82,7 +92,7 @@ defmodule PlugCaisson do
     end
   end
 
-  defp try_decompress(data, :raw), do: {:ok, data}
+  defp try_decompress(data, :raw, _), do: {:ok, data}
 
   defp try_decompress(data, {mod, state}), do: mod.process(state, data)
 
