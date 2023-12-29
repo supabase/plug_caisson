@@ -94,7 +94,7 @@ defmodule PlugCaisson do
 
   defp try_decompress(data, :raw, _), do: {:ok, data}
 
-  defp try_decompress(data, {mod, state}), do: mod.process(state, data)
+  defp try_decompress(data, {mod, state}, opts), do: mod.process(state, data, opts)
 
   defp set_state(conn, mod, state) do
     conn
