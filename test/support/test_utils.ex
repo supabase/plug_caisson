@@ -1,4 +1,6 @@
 defmodule TestUtils do
+  @moduledoc false
+
   use Plug.Test
 
   def post(body, content_encoding \\ nil) do

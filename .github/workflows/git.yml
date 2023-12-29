@@ -1,0 +1,20 @@
+name: Git
+
+on:
+  pull_request_target:
+    branches: [ main ]
+
+jobs:
+  commit-messages:
+    name: Check commit messages
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: ${{ github.event.pull_request.head.sha }}
+    - name: Check
+      env:
+        TYPES: feat|ft|fix|docs|chore|test
+      run: |
+        ! git log --no-merges --oneline -E --invert-grep --grep="^($TYPES):" --pretty=format:"::error title=Invalid commit message::%h %s" origin/$GITHUB_BASE_REF... | grep "."
