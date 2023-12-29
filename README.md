@@ -1,11 +1,11 @@
 # PlugCaisson
 
-Body reader that supports compressed payloads.
+An Elixir `Plug.Parsers` body reader that supports compressed payloads. Supports gzip, brotli, and [more](#supported-algorithms).
 
-[Caisson][caisson] is an geoengineering structure used to work on foundations of
-bridges and piers. Due to pressurised environment in the caisson (required to
-keep water out of it (as it has no bottom) people can get [decompression
-sickness][sick], also known as *caisson disease*.
+> A [caisson][caisson] is an geoengineering structure used to work on foundations of
+> bridges and piers. Due to pressurised environment in the caisson (required to
+> keep water out of it (as it has no bottom) people can get [decompression
+> sickness][sick], also known as *caisson disease*.
 
 [sick]: https://en.wikipedia.org/wiki/Decompression_sickness
 [caisson]: https://en.wikipedia.org/wiki/Caisson_(engineering)
@@ -50,10 +50,3 @@ plug Plug.Parsers,
 
 [^1]: Do not support streaming decoding yet, because of lack support for such
     flow upstream, see [ezstd#11](https://github.com/silviucpp/ezstd/issues/11)
-
-## TODO
-
-- [x] - partial Brotli decoding
-- [ ] - partial Zstd decoding
-- [ ] - support nested algorithms, i.e. `Content-Encoding: br, gzip` (pointless
-  in real life, but technically allowed by the HTTP)
