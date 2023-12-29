@@ -9,6 +9,7 @@ defmodule PlugCaisson.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      package: package(),
       docs: [
         extras: ~w[README.md],
         main: "readme",
@@ -37,6 +38,14 @@ defmodule PlugCaisson.MixProject do
       {:ezstd, "~> 1.0", optional: true},
       {:ex_doc, ">= 0.0.0", only: [:dev]},
       {:credo, ">= 0.0.0", only: [:dev, :test]}
+    ]
+  end
+
+  defp package() do
+    [
+      description: "Compressed Body Reader",
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/supabase/plug_caisson"}
     ]
   end
 end
