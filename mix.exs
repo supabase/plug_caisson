@@ -4,7 +4,7 @@ defmodule PlugCaisson.MixProject do
   def project do
     [
       app: :plug_caisson,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -36,6 +36,7 @@ defmodule PlugCaisson.MixProject do
       {:plug, "~> 1.15"},
       {:brotli, "~> 0.3.2", optional: true},
       {:ezstd, "~> 1.0", optional: true},
+      {:jason, ">= 0.0.0", only: [:dev, :test]},
       {:ex_doc, ">= 0.0.0", only: [:dev]},
       {:credo, ">= 0.0.0", only: [:dev, :test]}
     ]
