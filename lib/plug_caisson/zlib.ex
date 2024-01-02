@@ -23,7 +23,7 @@ defmodule PlugCaisson.Zlib do
   @impl true
   def init(opts) do
     z = :zlib.open()
-    :zlib.inflateInit(z, window_bits(opts))
+    :ok = :zlib.inflateInit(z, window_bits(opts))
 
     {:ok, z}
   end

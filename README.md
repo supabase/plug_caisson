@@ -17,7 +17,7 @@ Add `:plug_caisson` to dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:plug_caisson, "~> 0.1.0"},
+    {:plug_caisson, "~> 0.1.1"},
     # optional, for brotli support
     {:brotli, "~> 0.3.2"},
     # optional, for zstd support
@@ -31,10 +31,8 @@ And then add `{PlugCaisson, :read_body, []}` as a `:body_reader` to your `Plug.P
 ```elixir
 plug Plug.Parsers,
   parsers: [:urlencoded, :json],
-  body_reader: {PlugCaisson, :read_body, [
-    # optional, max decompressed size, defaults to 8_000_000 bytes
-    length: 8_000_000
-  ]}
+  body_reader: {PlugCaisson, :read_body, []},
+  length: 8_000_000
 ```
 
 All options passed to the plug are forwarded to [`Plug.Conn.read_body/2`](https://hexdocs.pm/plug/Plug.Conn.html#read_body/2).

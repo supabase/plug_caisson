@@ -100,8 +100,14 @@ defmodule PlugCaisson do
     conn
     |> Plug.Conn.put_private(__MODULE__, {mod, state})
     |> Plug.Conn.register_before_send(fn conn ->
-      {mod, state} = conn.private[__MODULE__]
-      mod.deinit(state)
+      case conn.private[__MODULE__] do
+        {mod, state} ->
+          mod.deinit(state)
+          Plug.Conn.put_private(conn, __MODULE__, nil)
+
+        nil ->
+          conn
+      end
     end)
   end
 end

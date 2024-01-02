@@ -32,7 +32,7 @@ defmodule PlugCaisson.Brotli do
     def deinit(_state), do: :ok
 
     @impl true
-    def process(decoder, data) do
+    def process(_state, _data, _opts) do
       {:error, :not_supported}
     end
   end
