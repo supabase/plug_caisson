@@ -63,10 +63,10 @@ defmodule PlugCaisson.Zlib do
   end
 
   defp chunked_inflate({:continue, output}, z, acc, length) do
-    if length - IO.iodata_length(output) <= 0 do
+    if length - IO.iodata_length(output) >= 0 do
       z
       |> :zlib.safeInflate([])
-      |> chunked_inflate(z, [output | acc], length - byte_size(output))
+      |> chunked_inflate(z, [output | acc], length - IO.iodata_length(output))
     else
       {:more, Enum.reverse([output | acc])}
     end
