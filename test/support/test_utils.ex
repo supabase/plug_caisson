@@ -17,7 +17,13 @@ defmodule TestUtils do
   end
 
   def echo_plug(conn, opts) do
-    encoder = opts[:encoder] || (&Function.identity/1)
+    encoder =
+      opts[:encoder] ||
+        fn _ ->
+          {:ok, data, _} = Plug.Conn.read_body(conn)
+          data
+        end
+
     code = opts[:code] || 200
 
     send_resp(conn, code, encoder.(conn.body_params))
