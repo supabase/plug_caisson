@@ -18,8 +18,9 @@ defmodule PlugCaisson.Brotli do
 
     @impl true
     def process(decoder, data, _opts) do
-      with :error <- :brotli_decoder.stream(decoder, data) do
-        {:error, :decompression_error}
+      case :brotli_decoder.stream(decoder, data) do
+        {result, data} when result in [:ok, :more] -> {result, data, decoder}
+        :error -> {:error, :decompression_error}
       end
     end
   else
