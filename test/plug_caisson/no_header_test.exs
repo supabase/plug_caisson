@@ -1,13 +1,13 @@
-defmodule PlugCaisson.GzipTest do
+defmodule PlugCaisson.NoHeaderTest do
   use ExUnit.Case, async: true
   use Plug.Test
   use ExUnitProperties
 
   import TestUtils
 
-  @content_type "gzip"
+  @content_type nil
 
-  defp compress(data), do: :zlib.gzip(data)
+  defp compress(data), do: data
 
   test "simple test" do
     raw = "Chrzęszczyrzewoszyckie chrząszcze chrobotliwie chrzeszczą w haszczach"
@@ -43,13 +43,6 @@ defmodule PlugCaisson.GzipTest do
 
       assert raw == Enum.join(body_stream(conn, length: length))
     end
-  end
-
-  test "when hit lenght limit it do not decompress further, even with zipbomb" do
-    data = File.read!(Path.join(__DIR__, "gzip_test/bomb.gz"))
-    conn = post(data, @content_type)
-
-    assert {:more, _, _} = PlugCaisson.read_body(conn)
   end
 
   test "Plug.Parser" do

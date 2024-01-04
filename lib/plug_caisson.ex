@@ -89,6 +89,9 @@ defmodule PlugCaisson do
           _ ->
             {:error, :not_supported}
         end
+
+      [_ | _] ->
+        {:error, :not_supported}
     end
   end
 

@@ -2,6 +2,8 @@ defmodule PlugCaissonTest do
   use ExUnit.Case, async: true
   use Plug.Test
 
+  import TestUtils
+
   @subject PlugCaisson
 
   doctest @subject
@@ -17,68 +19,71 @@ defmodule PlugCaissonTest do
     def deinit(pid), do: send(pid, :deinit)
 
     @impl true
-    def process(_, data, _opts), do: {:ok, data}
-  end
-
-  defmodule SimplePipeline do
-    use Plug.Builder
-
-    plug(Plug.Parsers,
-      parsers: [:urlencoded, :json],
-      json_decoder: Jason,
-      body_reader: {PlugCaisson, :read_body, []},
-      algorithms: %{
-        "dumb" => {PlugCaissonTest.DumbAlgo, []}
-      }
-    )
-
-    plug(:handle)
-
-    defp handle(conn, []) do
-      send_resp(conn, 200, Jason.encode!(conn.body_params))
-    end
-  end
-
-  defmodule DefaultPipeline do
-    @moduledoc false
-    use Plug.Builder
-
-    plug(Plug.Parsers,
-      parsers: [:urlencoded, :json],
-      json_decoder: Jason,
-      body_reader: {PlugCaisson, :read_body, []}
-    )
-
-    plug(:handle)
-
-    defp handle(conn, []) do
-      send_resp(conn, 200, Jason.encode!(conn.body_params))
-    end
+    def process(_state, data, _opts), do: {:ok, data}
   end
 
   test "deinit callback is called" do
+    pipeline =
+      pipeline([
+        {Plug.Parsers,
+         parsers: [:urlencoded, :json],
+         json_decoder: Jason,
+         body_reader: {PlugCaisson, :read_body, []},
+         algorithms: %{
+           "dumb" => {PlugCaissonTest.DumbAlgo, []}
+         }},
+        {&echo_plug/2, encoder: &Jason.encode!/1}
+      ])
+
     assert {200, _, body} =
              conn(:post, "/", Jason.encode!(%{"hello" => "world"}))
              |> put_req_header("content-type", "application/json")
              |> put_req_header("content-encoding", "dumb")
-             |> SimplePipeline.call([])
+             |> pipeline.()
              |> sent_resp()
 
     assert {:ok, %{"hello" => "world"}} == Jason.decode(body)
     assert_received :deinit
   end
 
-  test "gzip" do
-    value = for _i <- 1..2000, do: %{"hello" => "world"}
-    payload = :zlib.gzip(Jason.encode!(value))
+  test "ignores unknown encoding " do
+    pipeline =
+      pipeline([
+        {Plug.Parsers,
+         parsers: [:urlencoded, :json],
+         json_decoder: Jason,
+         body_reader: {PlugCaisson, :read_body, []}},
+        {&echo_plug/2, []}
+      ])
 
-    assert {200, _, body} =
-             conn(:post, "/", payload)
-             |> put_req_header("content-type", "application/json")
-             |> put_req_header("content-encoding", "gzip")
-             |> DefaultPipeline.call([])
-             |> sent_resp()
+    assert_raise Plug.BadRequestError, fn ->
+      conn(:post, "/", "{}")
+      |> put_req_header("content-type", "application/json")
+      |> put_req_header("content-encoding", "non-existent-algorithm")
+      |> pipeline.()
+      |> sent_resp()
+    end
+  end
 
-    assert {:ok, %{"_json" => [%{"hello" => "world"} | _]}} = Jason.decode(body)
+  test "ignores unknown multiple encodings" do
+    pipeline =
+      pipeline([
+        {Plug.Parsers,
+         parsers: [:urlencoded, :json],
+         json_decoder: Jason,
+         body_reader: {PlugCaisson, :read_body, []}},
+        {&echo_plug/2, []}
+      ])
+
+    assert_raise Plug.BadRequestError, fn ->
+      conn(:post, "/", "{}")
+      |> put_req_header("content-type", "application/json")
+      |> prepend_req_headers([
+        {"content-encoding", "gzip"},
+        {"content-encoding", "br"}
+      ])
+      |> pipeline.()
+      |> sent_resp()
+    end
   end
 end

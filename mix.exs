@@ -10,6 +10,9 @@ defmodule PlugCaisson.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),
+      test_coverage: [
+        ignore_modules: [TestUtils]
+      ],
       docs: [
         extras: ~w[README.md],
         main: "readme",
@@ -38,7 +41,8 @@ defmodule PlugCaisson.MixProject do
       {:ezstd, "~> 1.0", optional: true},
       {:jason, ">= 0.0.0", only: [:dev, :test]},
       {:ex_doc, ">= 0.0.0", only: [:dev]},
-      {:credo, ">= 0.0.0", only: [:dev, :test]}
+      {:credo, ">= 0.0.0", only: [:dev, :test]},
+      {:stream_data, "~> 0.6.0", only: [:dev, :test]}
     ]
   end
 
