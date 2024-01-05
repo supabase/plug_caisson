@@ -19,7 +19,7 @@ defmodule PlugCaissonTest do
     def deinit(pid), do: send(pid, :deinit)
 
     @impl true
-    def process(_state, data, _opts), do: {:ok, data}
+    def process(state, data, _opts), do: {:ok, data, state}
   end
 
   test "deinit callback is called" do

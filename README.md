@@ -17,7 +17,7 @@ Add `:plug_caisson` to dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:plug_caisson, "~> 0.1.1"},
+    {:plug_caisson, "~> 0.2.0"},
     # optional, for brotli support
     {:brotli, "~> 0.3.2"},
     # optional, for zstd support

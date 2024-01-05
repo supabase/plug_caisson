@@ -11,8 +11,9 @@ defmodule PlugCaisson.Zlib do
 
   ## Options
 
-  - `:window_bits` - size of the decompression window - `:type` - either `:gzip`
-    or `:deflate` that will set proper `:window_bits` according to each algorithm
+  - `:window_bits` - size of the decompression window
+  - `:type` - either `:gzip` or `:deflate` that will set proper `:window_bits`
+    according to each algorithm
 
   It is preferred to use `:type` over `:window_bits`, but if both are specified,
   then `:window_bits` take precedence.
@@ -44,8 +45,8 @@ defmodule PlugCaisson.Zlib do
     length = opts[:length]
 
     case chunked_inflate(state, data, length) do
-      {:finished, data} -> {:ok, IO.iodata_to_binary(data)}
-      {:more, data} -> {:more, IO.iodata_to_binary(data)}
+      {:finished, data} -> {:ok, IO.iodata_to_binary(data), state}
+      {:more, data} -> {:more, IO.iodata_to_binary(data), state}
       {:need_dictionary, _, _} -> {:error, :no_dictionary}
     end
   end
