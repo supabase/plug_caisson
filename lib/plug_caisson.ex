@@ -132,8 +132,13 @@ defmodule PlugCaisson do
 
     with {:ok, decoder, conn} <- fetch_decompressor(conn, opts[:algorithms] || @default),
          {read_return, body, conn} <- Plug.Conn.read_body(conn, opts),
-         {return, data, new_state} <- try_decompress(body, decoder, opts) do
-      {return(return, read_return), data, Plug.Conn.put_private(conn, __MODULE__, new_state)}
+         {decompress_return, data, new_state} <- try_decompress(body, decoder, opts) do
+        # cleanup before continuing
+        case new_state do
+          {mod, decompress_state} -> mod.deinit(decompress_state)
+          _ -> :noop
+        end
+      {return(decompress_return, read_return), data, Plug.Conn.put_private(conn, __MODULE__, new_state)}
     end
   end
 
@@ -196,11 +201,10 @@ defmodule PlugCaisson do
     |> Plug.Conn.put_private(__MODULE__, {mod, state})
     |> Plug.Conn.register_before_send(fn conn ->
       case conn.private[__MODULE__] do
-        {mod, state} ->
-          mod.deinit(state)
+        value when value != nil ->
           Plug.Conn.put_private(conn, __MODULE__, nil)
 
-        nil ->
+        _ ->
           conn
       end
     end)
