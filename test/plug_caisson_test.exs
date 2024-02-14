@@ -46,6 +46,33 @@ defmodule PlugCaissonTest do
     assert_received :deinit
   end
 
+  test "deinit is called as soon as all data is read" do
+    conn =
+      conn(:post, "/", "Zażółć gęślą jaźń")
+      |> put_req_header("content-type", "application/json")
+      |> put_req_header("content-encoding", "dumb")
+
+    assert {:more, _, conn} =
+             PlugCaisson.read_body(conn,
+               length: 5,
+               algorithms: %{
+                 "dumb" => {PlugCaissonTest.DumbAlgo, []}
+               }
+             )
+
+    refute_received :deinit
+
+    assert {:ok, _, _} =
+             PlugCaisson.read_body(conn,
+               length: 1000,
+               algorithms: %{
+                 "dumb" => {PlugCaissonTest.DumbAlgo, []}
+               }
+             )
+
+    assert_received :deinit
+  end
+
   test "ignores unknown encoding " do
     pipeline =
       pipeline([

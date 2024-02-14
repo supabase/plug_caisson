@@ -133,7 +133,17 @@ defmodule PlugCaisson do
     with {:ok, decoder, conn} <- fetch_decompressor(conn, opts[:algorithms] || @default),
          {read_return, body, conn} <- Plug.Conn.read_body(conn, opts),
          {return, data, new_state} <- try_decompress(body, decoder, opts) do
-      {return(return, read_return), data, Plug.Conn.put_private(conn, __MODULE__, new_state)}
+      result = return(return, read_return)
+
+      new_state =
+        if result == :ok do
+          deinit(new_state)
+          :finished
+        else
+          new_state
+        end
+
+      {result, data, Plug.Conn.put_private(conn, __MODULE__, new_state)}
     end
   end
 
@@ -146,6 +156,11 @@ defmodule PlugCaisson do
   # implementation and its state
   defp fetch_decompressor(%Plug.Conn{private: %{__MODULE__ => {mod, state}}} = conn, _types) do
     {:ok, {mod, state}, conn}
+  end
+
+  # Finished decompressing, nothing to do anymore
+  defp fetch_decompressor(%Plug.Conn{private: %{__MODULE__ => :finished}} = conn, _types) do
+    {:ok, :finished, conn}
   end
 
   defp fetch_decompressor(conn, types) do
@@ -180,6 +195,7 @@ defmodule PlugCaisson do
   # Special case for `identity` case as well case when there is no compression
   # algorithm defined at all
   defp try_decompress(data, :raw, _), do: {:ok, data, :raw}
+  defp try_decompress(data, :finished, _), do: {:ok, data, :finished}
 
   defp try_decompress(data, {mod, state}, opts) do
     with {result, data, new_state} when result in [:ok, :more] <- mod.process(state, data, opts) do
@@ -195,14 +211,12 @@ defmodule PlugCaisson do
     conn
     |> Plug.Conn.put_private(__MODULE__, {mod, state})
     |> Plug.Conn.register_before_send(fn conn ->
-      case conn.private[__MODULE__] do
-        {mod, state} ->
-          mod.deinit(state)
-          Plug.Conn.put_private(conn, __MODULE__, nil)
+      deinit(conn.private[__MODULE__])
 
-        nil ->
-          conn
-      end
+      Plug.Conn.put_private(conn, __MODULE__, nil)
     end)
   end
+
+  defp deinit({mod, state}), do: mod.deinit(state)
+  defp deinit(other) when other in [:raw, :finished, nil], do: nil
 end
