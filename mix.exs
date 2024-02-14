@@ -17,7 +17,7 @@ defmodule PlugCaisson.MixProject do
         extras: ~w[README.md],
         main: "readme",
         groups_for_modules: [
-          Algorithms: [~R/PlugCaisson\./]
+          Algorithms: [~r/PlugCaisson\./]
         ]
       ]
     ]
