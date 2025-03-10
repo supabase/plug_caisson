@@ -81,12 +81,12 @@ defmodule PlugCaisson do
 
   In case of success it should return 3-ary tuple:
 
-  - `{:ok, binary(), new_state :: term()}` - wich mean that all data was read
+  - `{:ok, binary(), new_state :: term()}` - which mean that all data was read
     and there is no more data left in the internal buffer.
   - `{:more, binary(), new_state :: term()}` - which mean that data was
     processed, but there is more data left to be read in future calls.
 
-  If error occured during processing `{:error, term()}` tuple should be returned.
+  If error occurred during processing `{:error, term()}` tuple should be returned.
   """
   @callback process(state :: term(), data :: binary(), opts :: keyword()) ::
               {:ok, binary(), new_state :: term()}
@@ -167,7 +167,7 @@ defmodule PlugCaisson do
     # XXX: Theoretically we should parse `content-encoding` header to split the
     # algorithms by comma, as `gzip, br` is correct value there, but as double
     # compression makes almost sense and spec explicitly disallows values
-    # like `identity, gzip` or `gzip, idenity`, then we simply can ignore
+    # like `identity, gzip` or `gzip, identity`, then we simply can ignore
     # parsing and use value as is
     case Plug.Conn.get_req_header(conn, "content-encoding") do
       [] ->

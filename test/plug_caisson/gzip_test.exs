@@ -45,7 +45,7 @@ defmodule PlugCaisson.GzipTest do
     end
   end
 
-  test "when hit lenght limit it do not decompress further, even with zipbomb" do
+  test "when hit length limit it do not decompress further, even with zipbomb" do
     data = File.read!(Path.join(__DIR__, "gzip_test/bomb.gz"))
     conn = post(data, @content_type)
 
