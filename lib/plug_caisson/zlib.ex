@@ -59,7 +59,7 @@ defmodule PlugCaisson.Zlib do
       end
   end
 
-  defp chunked_inflate({:finished, output}, _z, acc, _lenght) do
+  defp chunked_inflate({:finished, output}, _z, acc, _length) do
     {:finished, Enum.reverse([output | acc])}
   end
 
