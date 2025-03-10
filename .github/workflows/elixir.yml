@@ -12,8 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        otp_version: ['24', '25', '26']
-        elixir_version: ['1.15']
+        otp_version: ['25', '26', '27']
+        elixir_version: ['1.15', '1.16', '1.17', '1.18']
+        exclude:
+        - otp_version: '27'
+          elixir_version: '1.15'
+        - otp_version: '27'
+          elixir_version: '1.16'
     steps:
     - uses: actions/checkout@v4
     - name: Set up Elixir
