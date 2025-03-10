@@ -1,4 +1,4 @@
-defmodule PlugCaisson.ZstdTest do
+defmodule PlugCaisson.ZstandardTest do
   use ExUnit.Case, async: true
   use Plug.Test
   use ExUnitProperties
@@ -17,7 +17,6 @@ defmodule PlugCaisson.ZstdTest do
     assert raw == Enum.join(body_stream(conn))
   end
 
-  @tag skip: "ezstd currently do not support streaming decompression"
   test "partial inflation" do
     raw = "Chrzęszczyrzewoszyckie chrząszcze chrobotliwie chrzeszczą w haszczach"
 
@@ -32,18 +31,17 @@ defmodule PlugCaisson.ZstdTest do
       data = compress(raw)
       conn = post(data, @content_type)
 
-      assert raw == Enum.join(body_stream(conn))
+      assert raw == IO.iodata_to_binary(Enum.to_list(body_stream(conn)))
     end
   end
 
-  @tag skip: "ezstd currently do not support streaming decompression"
   property "length can be set to custom value" do
     check all raw <- binary(),
               length <- positive_integer() do
       data = compress(raw)
       conn = post(data, @content_type)
 
-      assert raw == Enum.join(body_stream(conn, length: length))
+      assert raw == IO.iodata_to_binary(Enum.to_list(body_stream(conn, length: length)))
     end
   end
 
@@ -67,6 +65,8 @@ defmodule PlugCaisson.ZstdTest do
   end
 
   describe "corpus tests" do
+    @describetag corpus: true
+
     for {path, content} <- corpus() do
       test "#{path}" do
         raw = unquote(content)

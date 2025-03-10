@@ -44,7 +44,7 @@ All options passed to the plug are forwarded to [`Plug.Conn.read_body/2`](https:
   ([RFC 1950][])
 - `br` (requires optional `:brotli` dependency) - Brotli algorithm developed by
   Google and supported by most browsers nowadays - [RFC 7932][]
-- `zstd` (requires optional `:ezstd` dependency)[^1] - Zstandard algorithm developed
+- `zstd` (requires optional `:ezstd` dependency) - Zstandard algorithm developed
   by Meta (Facebook) which provides faster compression/decompression times than
   Brotli, but worse compression ratio - [RFC 8478][]
 
@@ -53,7 +53,3 @@ All options passed to the plug are forwarded to [`Plug.Conn.read_body/2`](https:
 [RFC 1952]: https://datatracker.ietf.org/doc/html/rfc1952
 [RFC 7932]: https://datatracker.ietf.org/doc/html/rfc7932
 [RFC 8478]: https://datatracker.ietf.org/doc/html/rfc8478
-
-[^1]:
-    Do not support streaming decoding yet, because of lack support for such
-    flow upstream, see [ezstd#11](https://github.com/silviucpp/ezstd/issues/11)

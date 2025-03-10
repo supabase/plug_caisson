@@ -42,7 +42,7 @@ defmodule PlugCaisson.MixProject do
       {:jason, ">= 0.0.0", only: [:dev, :test]},
       {:ex_doc, ">= 0.0.0", only: [:dev]},
       {:credo, ">= 0.0.0", only: [:dev, :test]},
-      {:stream_data, "~> 0.6.0", only: [:dev, :test]}
+      {:stream_data, "~> 1.0", only: [:dev, :test]}
     ]
   end
 
