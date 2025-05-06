@@ -1,10 +1,13 @@
 defmodule PlugCaisson.MixProject do
   use Mix.Project
 
+  @version "0.2.1"
+  @github_url "https://github.com/supabase/plug_caisson"
+
   def project do
     [
       app: :plug_caisson,
-      version: "0.2.1",
+      version: @version,
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -16,6 +19,8 @@ defmodule PlugCaisson.MixProject do
       docs: [
         extras: ~w[README.md],
         main: "readme",
+        source_url: @github_url,
+        source_ref: "v#{@version}",
         groups_for_modules: [
           Algorithms: [~r/PlugCaisson\./]
         ]
@@ -50,7 +55,7 @@ defmodule PlugCaisson.MixProject do
     [
       description: "Compressed Body Reader",
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/supabase/plug_caisson"}
+      links: %{"GitHub" => @github_url}
     ]
   end
 end
